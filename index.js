@@ -31,17 +31,22 @@ app.get("/download", async (req, res) => {
       'attachment; filename="track.mp3"'
     );
 
+    // The downloader with headers + error catcher
     ytdl(url, {
       filter: "audioonly",
       quality: "highestaudio",
-    }).pipe(res);
-
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: "Download failed", details: err.message });
-  }
-});
-
-app.listen(PORT, () => {
-  console.log(`Server listening on port ${PORT}`);
-});
+      dlChunkSize: 0,
+      requestOptions: {
+        headers: {
+          "User-Agent":
+            "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/120 Safari/537.36",
+          "Accept-Language": "en-US,en;q=0.9",
+        },
+      },
+    })
+      .on("error", (err) => {
+        console.error("YTDL ERROR:", err);
+        return res.status(500).json({
+          error: "YTDL failed",
+          details: err.message,
+        });
